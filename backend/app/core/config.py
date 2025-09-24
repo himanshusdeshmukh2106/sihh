@@ -20,19 +20,22 @@ class Settings(BaseSettings):
     # API configuration
     API_V1_STR: str = "/api/v1"
     
-    # CORS settings - configure for React Native
+    # CORS settings - configure for React Native and Expo Go
     ALLOWED_HOSTS: List[str] = [
-        "http://localhost:8081",  # Expo dev server
-        "http://localhost:19000", # Expo dev tools
-        "http://localhost:19006", # Expo web
-        "exp://192.168.1.*:8081", # Expo on physical device
+        "http://localhost:8081",      # Expo dev server
+        "http://localhost:19000",     # Expo dev tools
+        "http://localhost:19006",     # Expo web
+        "http://192.168.1.4:8081",    # Expo on your computer's IP
+        "http://192.168.1.*:8081",    # Any device on your local network
+        "exp://192.168.1.*:8081",     # Expo protocol
+        "http://192.168.1.4:*",       # Any port on your computer
         "*"  # Allow all for development - restrict in production
     ]
     
     # Database
     DATABASE_URL: str = Field(
-        default="sqlite:///./sih_app.db",
-        description="Database URL"
+        default="postgresql://username:password@localhost:5432/sih_database",
+        description="PostgreSQL Database URL"
     )
     
     # Security

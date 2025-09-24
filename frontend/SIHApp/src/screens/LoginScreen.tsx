@@ -1,23 +1,23 @@
 /**
- * Login Screen Component
- * Modern login form with API integration
+ * Login Screen Component - Redesigned
+ * Clean and classy Google OAuth login with modern design
  */
 
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
+  StatusBar,
+  ImageBackground,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
-import { apiService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Heading1, Heading2, Heading4, Body1, Body2 } from '../components/ui/Typography';
+import { theme } from '../styles/theme';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -26,202 +26,209 @@ interface Props {
 }
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [email, setEmail] = useState('user@example.com');
-  const [password, setPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    setIsLoading(true);
+  const handleGoogleLogin = async () => {
     try {
-      const response = await apiService.login({ email, password });
-      Alert.alert('Success', 'Login successful!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('Profile'),
-        },
-      ]);
-    } catch (error: any) {
-      console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error.response?.data?.detail || 'Invalid credentials'
+      setIsLoading(true);
+      
+      // Add timeout protection for the entire login process
+      const loginPromise = signInWithGoogle();
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Login timeout - please try again')), 30000)
       );
+      
+      await Promise.race([loginPromise, timeoutPromise]);
+      
+      // Note: The actual navigation will be handled by auth state changes
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      
+      let errorMessage = 'Unable to sign in with Google';
+      
+      // Handle specific error types
+      if (error.message?.includes('timeout')) {
+        errorMessage = 'Login is taking too long. Please check your connection and try again.';
+      } else if (error.message?.includes('access_denied')) {
+        errorMessage = 'Access was denied. Please try again and allow access to continue.';
+      } else if (error.message?.includes('network')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const navigateToRegister = () => {
-    navigation.navigate('Register');
+  const goBack = () => {
+    navigation.goBack();
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to your account</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary[600]} />
+      
+      <ImageBackground
+        source={{
+          uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
+        }}
+        style={styles.backgroundImage}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.content}>
+            {/* Hero Section */}
+            <View style={styles.heroSection}>
+              <Heading1 color="inverse" align="center" style={styles.heroTitle}>
+                Welcome
+              </Heading1>
+              <Body1 color="inverse" align="center" style={styles.heroSubtitle}>
+                Sign in to continue your athletic journey
+              </Body1>
+            </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+            {/* Login Card */}
+            <Card variant="glass" style={styles.loginCard}>
+              <View style={styles.loginContent}>
+                <View style={styles.iconContainer}>
+                  <Heading1>🏆</Heading1>
+                </View>
+                
+                <Heading2 align="center" style={styles.cardTitle}>
+                  Sports Assessment Platform
+                </Heading2>
+                
+                <Body2 color="secondary" align="center" style={styles.cardSubtitle}>
+                  Access your personalized athletic dashboard
+                </Body2>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter your password"
-              secureTextEntry
-              autoCapitalize="none"
-            />
-          </View>
+                <Button
+                  title="Continue with Google"
+                  icon="🔐"
+                  onPress={handleGoogleLogin}
+                  loading={isLoading}
+                  fullWidth
+                  style={styles.googleButton}
+                />
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
+                <Button
+                  title="← Back to Home"
+                  variant="ghost"
+                  onPress={goBack}
+                  fullWidth
+                  style={styles.backButton}
+                />
+              </View>
+            </Card>
 
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={navigateToRegister}>
-              <Text style={styles.registerLink}>Sign up</Text>
-            </TouchableOpacity>
+            {/* Security Info Card */}
+            <Card variant="default" style={styles.infoCard}>
+              <Heading4 style={styles.infoTitle}>🔐 Secure Authentication</Heading4>
+              <View style={styles.infoList}>
+                <Body2 color="secondary" style={styles.infoItem}>
+                  • Google OAuth 2.0 authentication
+                </Body2>
+                <Body2 color="secondary" style={styles.infoItem}>
+                  • No passwords to remember
+                </Body2>
+                <Body2 color="secondary" style={styles.infoItem}>
+                  • Powered by Supabase
+                </Body2>
+                <Body2 color="secondary" style={styles.infoItem}>
+                  • Enterprise-grade security
+                </Body2>
+              </View>
+            </Card>
           </View>
         </View>
-
-        <View style={styles.demoContainer}>
-          <Text style={styles.demoTitle}>Demo Credentials</Text>
-          <Text style={styles.demoText}>Email: user@example.com</Text>
-          <Text style={styles.demoText}>Password: password</Text>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: theme.colors.neutral[900],
+  },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: theme.spacing[5],
     justifyContent: 'center',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#64748b',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  form: {
-    backgroundColor: '#fff',
-    padding: 24,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#f9fafb',
-  },
-  button: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 8,
+  
+  // Hero Section
+  heroSection: {
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: theme.spacing[10],
   },
-  buttonDisabled: {
-    opacity: 0.6,
+  heroTitle: {
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    marginBottom: theme.spacing[2],
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  heroSubtitle: {
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  registerContainer: {
-    flexDirection: 'row',
+  
+  // Login Card
+  loginCard: {
+    marginBottom: theme.spacing[6],
+  },
+  loginContent: {
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary[50],
+    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginBottom: theme.spacing[4],
   },
-  registerText: {
-    color: '#64748b',
-    fontSize: 16,
+  cardTitle: {
+    marginBottom: theme.spacing[2],
   },
-  registerLink: {
-    color: '#6366f1',
-    fontSize: 16,
-    fontWeight: '600',
+  cardSubtitle: {
+    marginBottom: theme.spacing[6],
+    textAlign: 'center',
   },
-  demoContainer: {
-    marginTop: 30,
-    padding: 16,
-    backgroundColor: '#e0e7ff',
-    borderRadius: 8,
+  googleButton: {
+    backgroundColor: '#4285f4',
+    marginBottom: theme.spacing[3],
+  },
+  backButton: {
+    marginTop: theme.spacing[2],
+  },
+  
+  // Info Card
+  infoCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#6366f1',
+    borderLeftColor: theme.colors.primary[500],
   },
-  demoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#3730a3',
-    marginBottom: 8,
+  infoTitle: {
+    marginBottom: theme.spacing[3],
   },
-  demoText: {
-    fontSize: 14,
-    color: '#4338ca',
-    marginBottom: 4,
+  infoList: {
+    gap: theme.spacing[1],
+  },
+  infoItem: {
+    marginBottom: theme.spacing[1],
   },
 });
 

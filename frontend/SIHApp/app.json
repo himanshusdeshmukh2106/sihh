@@ -7,6 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "com.sihapp",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -21,10 +22,25 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.SIHApp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "REACT_APP_SUPABASE_URL": "https://rlbimhbdhtnortixhefb.supabase.co",
+      "REACT_APP_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYmltaGJkaHRub3J0aXhoZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NjM0ODEsImV4cCI6MjA3NDIzOTQ4MX0.iqpSvNrAD9Iq0eoqQd6vKpT8nTDcaCec0jCdPHsScrw"
+    },
+    "plugins": [
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "This app needs access to location to auto-fill your address information.",
+          "locationWhenInUsePermission": "This app needs access to location to auto-fill your address information."
+        }
+      ]
+    ]
   }
 }

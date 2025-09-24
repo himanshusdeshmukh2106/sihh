@@ -21,8 +21,10 @@ import {
   ItemCategory,
 } from '../types';
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:8000'; // Change to your actual backend URL
+// API Configuration for Development
+// Using computer's IP address for Expo Go development
+const COMPUTER_IP = '192.168.1.3'; // Your computer's actual IP
+const API_BASE_URL = `http://${COMPUTER_IP}:8000`;
 const API_VERSION = '/api/v1';
 
 class ApiService {
@@ -190,9 +192,12 @@ class ApiService {
     return response.data;
   }
 
-  // Health Check
+  // Health Check - use the root endpoint without API prefix
   async healthCheck(): Promise<ApiResponse<any>> {
-    const response: AxiosResponse<ApiResponse<any>> = await this.api.get('/');
+    // Create a direct request to the root endpoint, bypassing the API_VERSION prefix
+    const response: AxiosResponse<ApiResponse<any>> = await axios.get(
+      `${API_BASE_URL}/`
+    );
     return response.data;
   }
 }

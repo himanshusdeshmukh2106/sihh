@@ -1,193 +1,86 @@
 """
-Items endpoints
-Modern FastAPI CRUD patterns for items/products
+Items endpoints with PostgreSQL database integration
+Modern FastAPI CRUD patterns
 """
 
-from fastapi import APIRouter, HTTPException, status, Query
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
-from enum import Enum
+from fastapi import APIRouter, HTTPException, status, Query, Depends
+from sqlalchemy.orm import Session
+from typing import List, Optional
+from app.models.database import get_db
+from app.schemas.item import ItemCreate, ItemUpdate, ItemResponse
+from app.services import item_service
 
 router = APIRouter()
-
-
-class ItemCategory(str, Enum):
-    """Item categories"""
-    ELECTRONICS = "electronics"
-    CLOTHING = "clothing"
-    BOOKS = "books"
-    HOME = "home"
-    SPORTS = "sports"
-
-
-class ItemCreate(BaseModel):
-    """Item creation model"""
-    name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    price: float = Field(..., gt=0)
-    category: ItemCategory
-    in_stock: bool = True
-
-
-class ItemUpdate(BaseModel):
-    """Item update model"""
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    price: Optional[float] = Field(None, gt=0)
-    category: Optional[ItemCategory] = None
-    in_stock: Optional[bool] = None
-
-
-class ItemResponse(BaseModel):
-    """Item response model"""
-    id: str
-    name: str
-    description: Optional[str]
-    price: float
-    category: ItemCategory
-    in_stock: bool
-    created_at: str
-    updated_at: str
 
 
 @router.get("/", response_model=List[ItemResponse])
 async def get_items(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(10, ge=1, le=100, description="Number of items to return"),
-    category: Optional[ItemCategory] = Query(None, description="Filter by category"),
-    in_stock: Optional[bool] = Query(None, description="Filter by stock status")
+    category: Optional[str] = Query(None, description="Filter by category"),
+    in_stock: Optional[bool] = Query(None, description="Filter by stock status"),
+    db: Session = Depends(get_db)
 ) -> List[ItemResponse]:
     """
-    Get list of items with pagination and filtering
+    Get list of items with filters and pagination
     """
-    # Mock data - replace with real database query
-    mock_items = [
-        ItemResponse(
-            id="item_1",
-            name="Smartphone",
-            description="Latest smartphone with advanced features",
-            price=599.99,
-            category=ItemCategory.ELECTRONICS,
-            in_stock=True,
-            created_at="2024-01-01T00:00:00Z",
-            updated_at="2024-01-01T00:00:00Z"
-        ),
-        ItemResponse(
-            id="item_2",
-            name="T-Shirt",
-            description="Comfortable cotton t-shirt",
-            price=29.99,
-            category=ItemCategory.CLOTHING,
-            in_stock=True,
-            created_at="2024-01-02T00:00:00Z",
-            updated_at="2024-01-02T00:00:00Z"
-        ),
-        ItemResponse(
-            id="item_3",
-            name="Python Programming Book",
-            description="Learn Python programming from scratch",
-            price=49.99,
-            category=ItemCategory.BOOKS,
-            in_stock=False,
-            created_at="2024-01-03T00:00:00Z",
-            updated_at="2024-01-03T00:00:00Z"
-        )
-    ]
-    
-    # Apply filters
-    filtered_items = mock_items
-    if category:
-        filtered_items = [item for item in filtered_items if item.category == category]
-    if in_stock is not None:
-        filtered_items = [item for item in filtered_items if item.in_stock == in_stock]
-    
-    return filtered_items[skip:skip + limit]
+    items = item_service.get_items(db, skip=skip, limit=limit, category=category, in_stock=in_stock)
+    return items
 
 
 @router.get("/{item_id}", response_model=ItemResponse)
-async def get_item(item_id: str) -> ItemResponse:
+async def get_item(item_id: int, db: Session = Depends(get_db)) -> ItemResponse:
     """
     Get item by ID
     """
-    # Mock data - replace with real database query
-    if item_id == "item_1":
-        return ItemResponse(
-            id=item_id,
-            name="Smartphone",
-            description="Latest smartphone with advanced features",
-            price=599.99,
-            category=ItemCategory.ELECTRONICS,
-            in_stock=True,
-            created_at="2024-01-01T00:00:00Z",
-            updated_at="2024-01-01T00:00:00Z"
+    item = item_service.get_item_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
         )
-    
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="Item not found"
-    )
+    return item
 
 
 @router.post("/", response_model=ItemResponse, status_code=status.HTTP_201_CREATED)
-async def create_item(item: ItemCreate) -> ItemResponse:
+async def create_item(item: ItemCreate, db: Session = Depends(get_db)) -> ItemResponse:
     """
     Create new item
     """
-    # Mock creation - replace with real database logic
-    return ItemResponse(
-        id="new_item_123",
-        name=item.name,
-        description=item.description,
-        price=item.price,
-        category=item.category,
-        in_stock=item.in_stock,
-        created_at="2024-01-01T00:00:00Z",
-        updated_at="2024-01-01T00:00:00Z"
-    )
+    return item_service.create_item(db, item)
 
 
 @router.put("/{item_id}", response_model=ItemResponse)
-async def update_item(item_id: str, item_update: ItemUpdate) -> ItemResponse:
+async def update_item(item_id: int, item_update: ItemUpdate, db: Session = Depends(get_db)) -> ItemResponse:
     """
     Update item by ID
     """
-    # Mock update - replace with real database logic
-    if item_id != "item_1":
+    item = item_service.update_item(db, item_id, item_update)
+    if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found"
         )
-    
-    return ItemResponse(
-        id=item_id,
-        name=item_update.name or "Updated Smartphone",
-        description=item_update.description or "Updated description",
-        price=item_update.price or 699.99,
-        category=item_update.category or ItemCategory.ELECTRONICS,
-        in_stock=item_update.in_stock if item_update.in_stock is not None else True,
-        created_at="2024-01-01T00:00:00Z",
-        updated_at="2024-01-01T12:00:00Z"
-    )
+    return item
 
 
 @router.delete("/{item_id}")
-async def delete_item(item_id: str) -> Dict[str, str]:
+async def delete_item(item_id: int, db: Session = Depends(get_db)):
     """
     Delete item by ID
     """
-    # Mock deletion - replace with real database logic
-    if item_id != "item_1":
+    success = item_service.delete_item(db, item_id)
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found"
         )
-    
     return {"message": f"Item {item_id} deleted successfully"}
 
 
 @router.get("/categories/", response_model=List[str])
-async def get_categories() -> List[str]:
+async def get_categories(db: Session = Depends(get_db)) -> List[str]:
     """
-    Get all available item categories
+    Get all item categories
     """
-    return [category.value for category in ItemCategory]
+    return item_service.get_categories(db)

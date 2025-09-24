@@ -1,0 +1,10 @@
+node_modules/
+*.log
+.expo/
+.expo-shared/
+dist/
+build/
+coverage/
+*.d.ts
+metro.config.js
+babel.config.js

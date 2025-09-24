@@ -13,6 +13,9 @@ import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import { ProfileSetupScreen } from '../screens/ProfileSetupScreen';
+import { SportsGridScreen } from '../screens/SportsGridScreen';
+import { SportDetailScreen } from '../screens/SportDetailScreen';
 import ItemsScreen from '../screens/ItemsScreen';
 import ItemDetailScreen from '../screens/ItemDetailScreen';
 import UsersScreen from '../screens/UsersScreen';
@@ -49,6 +52,48 @@ const AppNavigator: React.FC = () => {
           name="Register"
           component={RegisterScreen}
           options={{ title: 'Register' }}
+        />
+        <Stack.Screen
+          name="ProfileSetup"
+          component={ProfileSetupScreen}
+          options={{ 
+            title: 'Profile Setup',
+            headerStyle: {
+              backgroundColor: '#3498DB',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        />
+        <Stack.Screen
+          name="SportsGrid"
+          component={SportsGridScreen}
+          options={{ 
+            title: 'Choose Your Sport',
+            headerStyle: {
+              backgroundColor: '#3498DB',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        />
+        <Stack.Screen
+          name="SportDetail"
+          component={SportDetailScreen}
+          options={{ 
+            title: 'Sport Assessment',
+            headerStyle: {
+              backgroundColor: '#27AE60',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
         />
         <Stack.Screen
           name="Profile"

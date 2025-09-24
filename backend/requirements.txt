@@ -7,6 +7,7 @@ pydantic-settings==2.7.0
 # Database and ORM
 sqlalchemy==2.0.36
 alembic==1.14.0
+psycopg2-binary==2.9.10  # PostgreSQL adapter
 
 # Security and authentication
 python-jose[cryptography]==3.3.0

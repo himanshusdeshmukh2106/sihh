@@ -1,6 +1,6 @@
 """
 FastAPI Main Application
-Modern FastAPI setup with latest best practices (2024)
+Modern FastAPI setup with PostgreSQL database (2024)
 """
 
 from fastapi import FastAPI, HTTPException
@@ -10,6 +10,8 @@ import uvicorn
 
 from app.api.routes import api_router
 from app.core.config import settings
+from app.models.database import engine
+from app.models.models import Base
 
 
 @asynccontextmanager
@@ -17,7 +19,18 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     print("🚀 Starting up FastAPI application...")
+    print(f"📊 Database URL: {settings.DATABASE_URL[:50]}...")
+    
+    # Create database tables
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created successfully")
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        print("💡 Please check your PostgreSQL connection and credentials")
+    
     yield
+    
     # Shutdown
     print("🛑 Shutting down FastAPI application...")
 
@@ -63,9 +76,11 @@ async def health_check():
 
 
 if __name__ == "__main__":
+    # Run on all interfaces (0.0.0.0) to accept connections from mobile devices
+    # This allows Expo Go on your phone to connect to the backend
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host="0.0.0.0",  # Accept connections from any device on your network
         port=8000,
         reload=True,
         log_level="info"

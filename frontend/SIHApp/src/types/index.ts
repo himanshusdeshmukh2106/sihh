@@ -92,11 +92,126 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Profile: undefined;
+  ProfileSetup: undefined;
+  BasicInfo: undefined;
+  LocationInfo: undefined;
+  SportsPreferences: undefined;
+  SportsGrid: undefined;
+  SportDetail: { sportId: string; sportName: string };
   Items: undefined;
   ItemDetail: { itemId: string };
   Users: undefined;
   UserDetail: { userId: string };
 };
+
+// Athlete Profile Types
+export interface AthleteProfile {
+  id: string;
+  userId: string;
+  // Basic Information
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: 'male' | 'female' | 'other';
+  height: number; // in cm
+  weight: number; // in kg
+  // Contact & Location
+  phone?: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+  // Sports Information
+  primarySport: string;
+  secondarySports: string[];
+  experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'professional';
+  yearsOfExperience: number;
+  currentTeam?: string;
+  coachName?: string;
+  coachContact?: string;
+  // Goals & Preferences
+  trainingGoals: string[];
+  preferredTrainingTime: 'morning' | 'afternoon' | 'evening';
+  availabilityDays: string[];
+  // Medical Information
+  medicalConditions?: string;
+  allergies?: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelation: string;
+  // Profile Status
+  isProfileComplete: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Sport {
+  id: string;
+  name: string;
+  category: 'individual' | 'team';
+  icon: string;
+  description: string;
+  popularityRank: number;
+}
+
+export interface TrainingGoal {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+export interface ProfileSetupStep {
+  id: number;
+  title: string;
+  subtitle: string;
+  isCompleted: boolean;
+  isActive: boolean;
+}
+
+// Profile Setup Form Data
+export interface BasicInfoForm {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: 'male' | 'female' | 'other';
+  height: string;
+  weight: string;
+  phone: string;
+}
+
+export interface LocationForm {
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+}
+
+export interface SportsPreferencesForm {
+  primarySport: string;
+  secondarySports: string[];
+  experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'professional';
+  yearsOfExperience: string;
+  currentTeam: string;
+  coachName: string;
+  coachContact: string;
+}
+
+export interface GoalsForm {
+  trainingGoals: string[];
+  preferredTrainingTime: 'morning' | 'afternoon' | 'evening';
+  availabilityDays: string[];
+}
+
+export interface EmergencyContactForm {
+  medicalConditions: string;
+  allergies: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelation: string;
+}
 
 // Common Types
 export interface PaginationParams {
