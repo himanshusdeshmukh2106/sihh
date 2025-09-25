@@ -26,6 +26,7 @@ pytest-asyncio==0.24.0
 black==24.10.0
 isort==5.13.2
 flake8==7.1.1
+faker==33.1.0  # For generating dummy data
 
 # Production
 gunicorn==23.0.0

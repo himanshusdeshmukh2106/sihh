@@ -61,6 +61,76 @@ class User(Base):
     profile_completed = Column(Boolean, default=False)
 
 
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    full_name = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, nullable=False, default="admin")  # 'super_admin', 'admin', 'moderator'
+    is_active = Column(Boolean, default=True)
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Permissions stored as JSON string
+    permissions = Column(Text, nullable=True)  # JSON string of permissions
+
+
+class VideoContent(Base):
+    __tablename__ = "video_content"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    file_url = Column(String, nullable=False)
+    thumbnail_url = Column(String, nullable=True)
+    duration = Column(Integer, nullable=True)  # in seconds
+    file_size = Column(Integer, nullable=True)  # in bytes
+    
+    # Content categorization
+    sport = Column(String, nullable=False)
+    category = Column(String, nullable=False)  # 'tutorial', 'workout', 'technique', 'match', 'training'
+    difficulty_level = Column(String, nullable=True)  # 'beginner', 'intermediate', 'advanced'
+    tags = Column(Text, nullable=True)  # JSON string of tags
+    
+    # Content status and moderation
+    status = Column(String, nullable=False, default="pending")  # 'pending', 'approved', 'rejected', 'flagged'
+    moderation_status = Column(String, nullable=False, default="unreviewed")  # 'unreviewed', 'approved', 'rejected'
+    moderation_reason = Column(Text, nullable=True)
+    moderated_by = Column(Integer, nullable=True)  # Admin user ID
+    moderated_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Upload information
+    uploaded_by = Column(Integer, nullable=True)  # User ID who uploaded
+    upload_source = Column(String, nullable=True)  # 'admin', 'user', 'api'
+    
+    # Engagement metrics
+    view_count = Column(Integer, default=0)
+    like_count = Column(Integer, default=0)
+    dislike_count = Column(Integer, default=0)
+    share_count = Column(Integer, default=0)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    published_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class VideoModerationLog(Base):
+    __tablename__ = "video_moderation_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    video_id = Column(Integer, nullable=False)
+    admin_id = Column(Integer, nullable=False)
+    action = Column(String, nullable=False)  # 'approve', 'reject', 'flag', 'unflag'
+    reason = Column(Text, nullable=True)
+    previous_status = Column(String, nullable=True)
+    new_status = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Item(Base):
     __tablename__ = "items"
 

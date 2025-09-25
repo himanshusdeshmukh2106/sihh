@@ -85,12 +85,8 @@ export const INDIAN_STATES = [
 ];
 
 export const HIGHEST_LEVEL_PLAYED = [
-  { value: 'recreational', label: 'Recreational', description: 'Playing for fun and fitness' },
-  { value: 'school', label: 'School Level', description: 'Inter-school competitions' },
-  { value: 'college', label: 'College Level', description: 'Inter-college tournaments' },
-  { value: 'district', label: 'District Level', description: 'District championships' },
-  { value: 'state', label: 'State Level', description: 'State tournaments and championships' },
-  { value: 'national', label: 'National Level', description: 'National championships and competitions' },
-  { value: 'international', label: 'International Level', description: 'International competitions and olympics' },
-  { value: 'professional', label: 'Professional', description: 'Professional leagues and clubs' },
+  { value: 'district', label: 'District', description: 'District championships' },
+  { value: 'state', label: 'State', description: 'State tournaments and championships' },
+  { value: 'national', label: 'National', description: 'National championships and competitions' },
+  { value: 'international', label: 'International', description: 'International competitions and olympics' },
 ];

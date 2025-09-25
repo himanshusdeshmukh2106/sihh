@@ -3,97 +3,94 @@
  * Custom slider for experience level selection
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  PanResponder,
+  Animated,
 } from 'react-native';
 
 interface ExperienceSliderProps {
-  value: number; // 0-100
+  value: number; // 1-20 (years)
   onValueChange: (value: number) => void;
   style?: any;
 }
-
-const EXPERIENCE_LABELS = [
-  { value: 0, label: 'Beginner', color: '#E74C3C' },
-  { value: 25, label: 'Amateur', color: '#F39C12' },
-  { value: 50, label: 'Intermediate', color: '#F1C40F' },
-  { value: 75, label: 'Advanced', color: '#3498DB' },
-  { value: 100, label: 'Expert', color: '#27AE60' },
-];
 
 export const ExperienceSlider: React.FC<ExperienceSliderProps> = ({
   value,
   onValueChange,
   style,
 }) => {
-  const handleTap = (x: number, width: number) => {
-    const percentage = Math.max(0, Math.min(100, (x / width) * 100));
-    const snappedValue = Math.round(percentage / 25) * 25;
-    onValueChange(snappedValue);
+  const sliderWidth = 300;
+  const trackRef = useRef<View>(null);
+
+  const handleTap = (x: number) => {
+    const percentage = Math.max(0, Math.min(100, (x / sliderWidth) * 100));
+    const years = Math.round((percentage / 100) * 19) + 1; // Convert to 1-20 years
+    onValueChange(years);
   };
 
-  const getCurrentLabel = () => {
-    return EXPERIENCE_LABELS.find(item => item.value === value) || EXPERIENCE_LABELS[0];
+  const getSliderPosition = () => {
+    return ((value - 1) / 19) * 100; // Convert years to percentage
   };
 
-  const currentLabel = getCurrentLabel();
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (evt) => {
+      // Handle initial touch
+      const x = evt.nativeEvent.locationX;
+      handleTap(x);
+    },
+    onPanResponderMove: (evt) => {
+      // Handle drag movement
+      const x = evt.nativeEvent.locationX;
+      handleTap(x);
+    },
+    onPanResponderRelease: () => {
+      // Handle release
+    },
+  });
 
   return (
     <View style={[styles.container, style]}>
-      <Text style={styles.title}>Experience Level</Text>
+      <Text style={styles.title}>Years of Experience</Text>
       
       {/* Current Value Display */}
       <View style={styles.valueContainer}>
-        <Text style={[styles.valueText, { color: currentLabel.color }]}>
-          {currentLabel.label}
+        <Text style={styles.valueText}>
+          {value} {value === 1 ? 'Year' : 'Years'}
         </Text>
       </View>
 
       {/* Slider Track */}
       <View style={styles.sliderContainer}>
-        <TouchableOpacity
+        <View
+          ref={trackRef}
           style={styles.track}
-          activeOpacity={1}
-          onPress={(event) => {
-            const { locationX } = event.nativeEvent;
-            handleTap(locationX, 300); // Assuming track width is 300
-          }}
+          {...panResponder.panHandlers}
         >
           {/* Track Background */}
           <View style={styles.trackBackground} />
           
           {/* Active Track */}
-          <View style={[styles.activeTrack, { width: `${value}%` }]} />
+          <View style={[styles.activeTrack, { width: `${getSliderPosition()}%` }]} />
           
           {/* Thumb */}
-          <View style={[styles.thumb, { left: `${value}%`, backgroundColor: currentLabel.color }]} />
-        </TouchableOpacity>
+          <View style={[styles.thumb, { left: `${getSliderPosition()}%` }]} />
+        </View>
       </View>
 
-      {/* Labels */}
+      {/* Year Labels */}
       <View style={styles.labelsContainer}>
-        {EXPERIENCE_LABELS.map((item) => (
-          <TouchableOpacity
-            key={item.value}
-            style={styles.labelItem}
-            onPress={() => onValueChange(item.value)}
-          >
-            <View style={[
-              styles.labelDot,
-              { backgroundColor: value === item.value ? item.color : '#BDC3C7' }
-            ]} />
-            <Text style={[
-              styles.labelText,
-              { color: value === item.value ? item.color : '#7F8C8D' }
-            ]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.labelText}>1</Text>
+        <Text style={styles.labelText}>5</Text>
+        <Text style={styles.labelText}>10</Text>
+        <Text style={styles.labelText}>15</Text>
+        <Text style={styles.labelText}>20</Text>
       </View>
     </View>
   );
@@ -117,6 +114,7 @@ const styles = StyleSheet.create({
   valueText: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#3498DB',
   },
   sliderContainer: {
     alignItems: 'center',
@@ -144,6 +142,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
+    backgroundColor: '#3498DB',
     marginLeft: -12,
     marginTop: -9,
     shadowColor: '#000',
@@ -160,19 +159,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 10,
   },
-  labelItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  labelDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 8,
-  },
   labelText: {
     fontSize: 12,
     fontWeight: '500',
+    color: '#7F8C8D',
     textAlign: 'center',
   },
 });

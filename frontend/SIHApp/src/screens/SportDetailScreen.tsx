@@ -28,8 +28,8 @@ export const SportDetailScreen: React.FC = () => {
   const route = useRoute<SportDetailRouteProp>();
   const { sportId, sportName } = route.params;
 
-  const [experienceLevel, setExperienceLevel] = useState(25); // 0-100
-  const [highestLevel, setHighestLevel] = useState('recreational');
+  const [experienceLevel, setExperienceLevel] = useState(2); // 1-20 years
+  const [highestLevel, setHighestLevel] = useState('district');
 
   const sport = SPORTS_DATA.find(s => s.id === sportId);
 
@@ -60,14 +60,11 @@ export const SportDetailScreen: React.FC = () => {
   };
 
   const getExperienceLabel = () => {
-    if (experienceLevel <= 25) return 'Beginner';
-    if (experienceLevel <= 50) return 'Intermediate';
-    if (experienceLevel <= 75) return 'Advanced';
-    return 'Expert';
+    return `${experienceLevel} ${experienceLevel === 1 ? 'Year' : 'Years'}`;
   };
 
   const getHighestLevelLabel = () => {
-    return HIGHEST_LEVEL_PLAYED.find(level => level.value === highestLevel)?.label || 'Recreational';
+    return HIGHEST_LEVEL_PLAYED.find(level => level.value === highestLevel)?.label || 'District';
   };
 
   return (
