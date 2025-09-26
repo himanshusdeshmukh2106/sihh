@@ -34,7 +34,6 @@ export const SportDetailScreen: React.FC = () => {
   const sport = SPORTS_DATA.find(s => s.id === sportId);
 
   const handleStartAssessment = () => {
-    // TODO: Navigate to assessment screen or save data
     const assessmentData = {
       sport: sportId,
       experienceLevel,
@@ -45,14 +44,19 @@ export const SportDetailScreen: React.FC = () => {
     
     Alert.alert(
       '🚀 Assessment Starting!',
-      `Ready to begin your ${sportName} assessment?\n\nExperience: ${getExperienceLabel()}\nHighest Level: ${getHighestLevelLabel()}`,
+      `Ready to begin your ${sportName} pushup assessment?\n\nExperience: ${getExperienceLabel()}\nHighest Level: ${getHighestLevelLabel()}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Start Assessment',
           onPress: () => {
-            // Navigate to assessment or placeholder
-            Alert.alert('Success!', 'Assessment module will be implemented next!');
+            // Navigate to pushup assessment screen
+            navigation.navigate('PushupAssessment', {
+              sportId,
+              sportName,
+              experienceLevel,
+              highestLevel
+            });
           },
         },
       ]

@@ -6,6 +6,7 @@
 import React from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -25,7 +26,17 @@ export const SportsGridScreen: React.FC = () => {
   const navigation = useNavigation<SportsGridNavigationProp>();
 
   const handleSportSelect = (sportId: string, sportName: string) => {
-    navigation.navigate('SportDetail', { sportId, sportName });
+    if (sportId === 'pushups') {
+      // Navigate directly to pushup assessment with default values
+      navigation.navigate('PushupAssessment', {
+        sportId: 'pushups',
+        sportName: 'Pushup Assessment',
+        experienceLevel: 2, // Default 2 years experience
+        highestLevel: 'district' // Default district level
+      });
+    } else {
+      navigation.navigate('SportDetail', { sportId, sportName });
+    }
   };
 
   const renderSportCard = (sport: any) => (

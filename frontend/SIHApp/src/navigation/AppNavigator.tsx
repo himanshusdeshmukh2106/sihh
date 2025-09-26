@@ -16,6 +16,8 @@ import ProfileScreen from '../screens/ProfileScreen';
 import { ProfileSetupScreen } from '../screens/ProfileSetupScreen';
 import { SportsGridScreen } from '../screens/SportsGridScreen';
 import { SportDetailScreen } from '../screens/SportDetailScreen';
+import { PushupAssessmentScreen } from '../screens/PushupAssessmentScreen';
+import { AssessmentResultsScreen } from '../screens/AssessmentResultsScreen';
 import ItemsScreen from '../screens/ItemsScreen';
 import ItemDetailScreen from '../screens/ItemDetailScreen';
 import UsersScreen from '../screens/UsersScreen';
@@ -88,6 +90,28 @@ const AppNavigator: React.FC = () => {
             title: 'Sport Assessment',
             headerStyle: {
               backgroundColor: '#27AE60',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        />
+        <Stack.Screen
+          name="PushupAssessment"
+          component={PushupAssessmentScreen}
+          options={{ 
+            title: 'Pushup Assessment',
+            headerShown: false, // Hide header for full-screen camera view
+          }}
+        />
+        <Stack.Screen
+          name="AssessmentResults"
+          component={AssessmentResultsScreen}
+          options={{ 
+            title: 'Assessment Results',
+            headerStyle: {
+              backgroundColor: '#3498DB',
             },
             headerTintColor: '#fff',
             headerTitleStyle: {

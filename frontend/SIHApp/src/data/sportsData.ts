@@ -6,6 +6,9 @@
 import { Sport, TrainingGoal } from '../types';
 
 export const SPORTS_DATA: Sport[] = [
+  // Fitness Assessment
+  { id: 'pushups', name: 'Pushup Assessment', category: 'individual', icon: '💪', description: 'AI-powered pushup counter and form analysis', popularityRank: 0 },
+  
   // Team Sports
   { id: 'cricket', name: 'Cricket', category: 'team', icon: '🏏', description: 'Bat and ball team sport', popularityRank: 1 },
   { id: 'football', name: 'Football (Soccer)', category: 'team', icon: '⚽', description: 'World\'s most popular sport', popularityRank: 2 },
