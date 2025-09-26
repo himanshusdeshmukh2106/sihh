@@ -38,11 +38,21 @@ export const SportSelector: React.FC<SportSelectorProps> = ({
   const renderSportItem = (sport: Sport) => {
     const isSelected = selectedSports.includes(sport.id);
     
+    const handleSportPress = () => {
+      if (multiSelect) {
+        onSportSelect(sport.id);
+      } else {
+        // For single select, always call with the sport ID
+        // The parent component will handle toggle logic
+        onSportSelect(sport.id);
+      }
+    };
+    
     return (
       <TouchableOpacity
         key={sport.id}
         style={styles.sportItemContainer}
-        onPress={() => onSportSelect(sport.id)}
+        onPress={handleSportPress}
         activeOpacity={0.8}
       >
         <Card 

@@ -17,10 +17,13 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types';
 import * as Location from 'expo-location';
 import { StepProgress } from '../components/StepProgress';
 import { CustomInput, PickerInput } from '../components/CustomInput';
-import { SportSelector } from '../components/SportSelector';
+import { UserProfileService } from '../services/UserProfileService';
+
 import {
   ProfileSetupStep,
   BasicInfoForm,
@@ -31,6 +34,7 @@ import {
   GENDER_OPTIONS,
   INDIAN_STATES,
   EXPERIENCE_LEVELS,
+
 } from '../data/sportsData';
 
 const SETUP_STEPS: ProfileSetupStep[] = [
@@ -39,11 +43,14 @@ const SETUP_STEPS: ProfileSetupStep[] = [
   { id: 3, title: 'Sports', subtitle: 'Preferences', isCompleted: false, isActive: false },
 ];
 
+type ProfileSetupScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ProfileSetup'>;
+
 export const ProfileSetupScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<ProfileSetupScreenNavigationProp>();
   const [currentStep, setCurrentStep] = useState(1);
   const [steps, setSteps] = useState(SETUP_STEPS);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Form data states
   const [basicInfo, setBasicInfo] = useState<BasicInfoForm>({
@@ -84,6 +91,55 @@ export const ProfileSetupScreen: React.FC = () => {
       }))
     );
   };
+
+  // Load existing profile data when component mounts
+  useEffect(() => {
+    const loadExistingProfile = async () => {
+      try {
+        setProfileLoading(true);
+        const existingProfile = await UserProfileService.loadProfile();
+        if (existingProfile) {
+          // Pre-fill form with existing data
+          setBasicInfo({
+            firstName: existingProfile.firstName,
+            lastName: existingProfile.lastName,
+            dateOfBirth: existingProfile.dateOfBirth,
+            gender: existingProfile.gender,
+            height: existingProfile.height,
+            weight: existingProfile.weight,
+            phone: existingProfile.phone,
+          });
+          
+          setLocation({
+            address: existingProfile.address,
+            city: existingProfile.city,
+            state: existingProfile.state,
+            country: existingProfile.country,
+            pincode: existingProfile.pincode,
+          });
+          
+          setSportsPreferences({
+            primarySport: existingProfile.primarySport,
+            secondarySports: existingProfile.secondarySports,
+            experienceLevel: existingProfile.experienceLevel,
+            yearsOfExperience: existingProfile.yearsOfExperience,
+            currentTeam: existingProfile.currentTeam,
+            coachName: existingProfile.coachName,
+            coachContact: existingProfile.coachContact,
+          });
+          
+          console.log('Existing profile loaded and form pre-filled');
+        }
+      } catch (error) {
+        console.error('Error loading existing profile:', error);
+        // Continue with empty form if loading fails
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadExistingProfile();
+  }, []);
 
   useEffect(() => {
     updateStepProgress(currentStep, false, true);
@@ -160,7 +216,7 @@ export const ProfileSetupScreen: React.FC = () => {
     if (currentStep < 3) {
       updateStepProgress(currentStep, true, false);
       setCurrentStep(currentStep + 1);
-    } else {
+    } else if (currentStep === 3) {
       handleSubmit();
     }
   };
@@ -173,26 +229,33 @@ export const ProfileSetupScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const profileData = {
-        ...basicInfo,
-        ...location,
-        ...sportsPreferences,
-      };
+      // Save profile data using UserProfileService
+      const savedProfile = await UserProfileService.saveProfile(
+        basicInfo,
+        location,
+        sportsPreferences
+      );
 
-      // TODO: Save profile data to backend
-      console.log('Profile Data:', profileData);
+      console.log('Profile saved:', savedProfile);
+      
+      // Check if this was an update or new profile
+      const existingProfile = await UserProfileService.loadProfile();
+      const isUpdate = existingProfile && existingProfile.id !== savedProfile.id;
       
       Alert.alert(
-        'Profile Complete! 🎉',
-        'Your athlete profile has been set up successfully.',
+        isUpdate ? 'Profile Updated! ✅' : 'Profile Complete! 🎉',
+        isUpdate 
+          ? 'Your athlete profile has been updated successfully.'
+          : 'Your athlete profile has been set up successfully.',
         [
           {
             text: 'Continue',
-            onPress: () => navigation.navigate('Home' as never),
+            onPress: () => navigation.navigate('Home'),
           },
         ]
       );
     } catch (error) {
+      console.error('Profile save error:', error);
       Alert.alert('Error', 'Failed to save profile. Please try again.');
     }
   };
@@ -355,11 +418,13 @@ export const ProfileSetupScreen: React.FC = () => {
       <Text style={styles.stepTitle}>⚽ Sports Preferences</Text>
       <Text style={styles.stepSubtitle}>What sports do you love?</Text>
 
-      <SportSelector
-        selectedSports={sportsPreferences.primarySport ? [sportsPreferences.primarySport] : []}
-        onSportSelect={(sportId) => setSportsPreferences({...sportsPreferences, primarySport: sportId})}
-        title="Select Your Primary Sport"
-        style={styles.sportSelector}
+      <CustomInput
+        label="Primary Sport"
+        value={sportsPreferences.primarySport}
+        onChangeText={(text) => setSportsPreferences({...sportsPreferences, primarySport: text})}
+        placeholder="e.g., Football, Cricket, Basketball"
+        icon="⚽"
+        required
       />
 
       <PickerInput
@@ -395,6 +460,16 @@ export const ProfileSetupScreen: React.FC = () => {
       />
     </View>
   );
+
+  // Show loading screen while profile is being loaded
+  if (profileLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3498DB" />
+        <Text style={styles.loadingText}>Loading your profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -524,6 +599,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     maxHeight: 300,
   },
+
   gpsButton: {
     backgroundColor: '#27AE60',
     flexDirection: 'row',
@@ -590,5 +666,16 @@ const styles = StyleSheet.create({
     color: '#7F8C8D',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0F8FF',
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: '#7F8C8D',
   },
 });

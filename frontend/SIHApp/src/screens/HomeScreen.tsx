@@ -3,7 +3,7 @@
  * Clean and classy main landing screen with modern design
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,11 +12,14 @@ import {
   StatusBar,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Heading1, Heading2, Heading3, Heading4, Body1, Body2 } from '../components/ui/Typography';
+import { UserProfileCard } from '../components/UserProfileCard';
+import { UserProfile, UserProfileService } from '../services/UserProfileService';
 import { theme } from '../styles/theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -27,19 +30,44 @@ interface Props {
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { user, session, loading, signInWithGoogle, signOut } = useAuth();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  // Redirect to profile setup after successful authentication
-  useEffect(() => {
-    if (user && session && !loading) {
-      // Check if user needs to complete profile setup
-      // In a real app, you'd check user.user_metadata or make an API call
-      const hasCompletedProfile = user.user_metadata?.profile_completed;
+  // Load user profile function
+  const loadUserProfile = async () => {
+    try {
+      setProfileLoading(true);
+      const profile = await UserProfileService.loadProfile();
+      setUserProfile(profile);
       
-      if (!hasCompletedProfile) {
+      // If user is authenticated but no profile exists, redirect to setup
+      if (user && session && !loading && !profile) {
         navigation.navigate('ProfileSetup');
       }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Load profile on initial mount
+  useEffect(() => {
+    if (user && session && !loading) {
+      loadUserProfile();
+    } else {
+      setProfileLoading(false);
     }
   }, [user, session, loading, navigation]);
+
+  // Refresh profile when screen comes into focus (e.g., returning from profile setup)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && session && !loading) {
+        loadUserProfile();
+      }
+    }, [user, session, loading])
+  );
 
 
 
@@ -60,7 +88,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleNavigation = (screen: keyof RootStackParamList) => {
-    navigation.navigate(screen as any);
+    navigation.navigate(screen);
   };
 
 
@@ -83,15 +111,29 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               </Body1>
             </View>
 
-            {/* User Status Card */}
-            {user ? (
+            {/* User Profile Card - First Card */}
+            {user && userProfile && !profileLoading ? (
+              <UserProfileCard
+                profile={userProfile}
+                onPress={() => handleNavigation('Profile')}
+                style={styles.profileCard}
+              />
+            ) : user && !profileLoading ? (
               <Card variant="glass" style={styles.userCard}>
                 <Heading3 align="center" style={styles.welcomeText}>
-                  Welcome back! 👋
+                  Welcome! 👋
                 </Heading3>
                 <Body2 color="secondary" align="center" style={styles.userEmail}>
                   {user.email}
                 </Body2>
+                <Body2 color="secondary" align="center" style={styles.setupPrompt}>
+                  Complete your profile to get started
+                </Body2>
+                <Button
+                  title="Setup Profile"
+                  onPress={() => handleNavigation('ProfileSetup')}
+                  style={styles.setupButton}
+                />
                 <Button
                   title="Sign Out"
                   variant="outline"
@@ -99,7 +141,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   style={styles.signOutButton}
                 />
               </Card>
-            ) : (
+            ) : !user ? (
               <Card variant="glass" style={styles.authCard}>
                 <Heading3 align="center" style={styles.authPrompt}>
                   Ready to start your athletic journey?
@@ -113,7 +155,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   style={styles.googleButton}
                 />
               </Card>
-            )}
+            ) : null}
 
 
 
@@ -132,6 +174,24 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     <Button
                       title="Start Assessment"
                       onPress={() => handleNavigation('SportsGrid')}
+                      fullWidth
+                      style={styles.navCardButton}
+                    />
+                  </View>
+                </Card>
+
+                <Card variant="elevated" style={styles.navCard}>
+                  <View style={styles.navCardContent}>
+                    <View style={styles.navCardIcon}>
+                      <Heading2>👤</Heading2>
+                    </View>
+                    <Heading4 style={styles.navCardTitle}>User Profile</Heading4>
+                    <Body2 color="secondary" style={styles.navCardDescription}>
+                      View and edit your profile
+                    </Body2>
+                    <Button
+                      title="Go to Profile"
+                      onPress={() => handleNavigation('Profile')}
                       fullWidth
                       style={styles.navCardButton}
                     />
@@ -173,6 +233,11 @@ const styles = StyleSheet.create({
     // Removed text shadow styles
   },
   
+  // Profile Card
+  profileCard: {
+    marginBottom: theme.spacing[6],
+  },
+  
   // User Card
   userCard: {
     alignItems: 'center',
@@ -182,7 +247,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing[1],
   },
   userEmail: {
+    marginBottom: theme.spacing[2],
+  },
+  setupPrompt: {
     marginBottom: theme.spacing[4],
+  },
+  setupButton: {
+    marginBottom: theme.spacing[2],
   },
   signOutButton: {
     marginTop: theme.spacing[2],
